@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website-ssh
+  namespace: website-ssh
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: website-ssh
+  template:
+    metadata:
+      labels:
+        app: website-ssh
+    spec:
+      # Same node as edge-proxy, so the router forwards every miro.zip port
+      # to one machine: external 22 -> pi3-2:2222. The node's own sshd stays
+      # on 22 and is never exposed to the internet.
+      nodeSelector:
+        kubernetes.io/hostname: pi3-2
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        # distroless "nonroot" user - fsGroup lets it read the key Secret.
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: website-ssh
+          image: ghcr.io/miro-ali-akbar/website-ssh:latest
+          env:
+            # In-cluster, so content refreshes don't hairpin through the router.
+            - name: SITE_URL
+              value: http://web-server.web-server.svc.cluster.local
+            # Same counters as the website: SSH visits and claps count too.
+            - name: COUNTERS_URL
+              value: http://site-counters.site-counters.svc.cluster.local:8080/api
+            - name: HOST_KEY_PATH
+              value: /hostkey/id_ed25519
+          ports:
+            - containerPort: 2222
+              hostPort: 2222
+          resources:
+            requests:
+              cpu: 25m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: hostkey
+              mountPath: /hostkey
+              readOnly: true
+      volumes:
+        # Fixed host key so returning visitors don't get a "host key changed"
+        # warning after every redeploy. Created by hand, never committed:
+        #   ssh-keygen -t ed25519 -N "" -f id_ed25519
+        #   kubectl -n website-ssh create secret generic website-ssh-hostkey --from-file=id_ed25519
+        - name: hostkey
+          secret:
+            secretName: website-ssh-hostkey
+            defaultMode: 0440
