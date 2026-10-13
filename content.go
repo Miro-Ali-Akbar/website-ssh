@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"golang.org/x/net/html"
 )
@@ -144,7 +145,38 @@ func parseSite(indexHTML, projectsHTML []byte) ([]Section, error) {
 	if len(p.sections) < 2 {
 		return nil, fmt.Errorf("no sections found")
 	}
+	for i := range p.sections {
+		sanitize(&p.sections[i])
+	}
 	return p.sections, nil
+}
+
+// sanitize strips control characters (ESC, BEL and the like) from everything parsed out of
+// the website, and drops link targets that are not http(s) or mailto. The text is written
+// straight to visitors' terminals, so it must not be able to carry escape sequences.
+func sanitize(sec *Section) {
+	sec.Title = noControl(sec.Title)
+	for i, para := range sec.Paragraphs {
+		for j := range para {
+			sec.Paragraphs[i][j].Text = noControl(para[j].Text)
+		}
+	}
+	for i, l := range sec.Links {
+		l.Text, l.URL = noControl(l.Text), noControl(l.URL)
+		if !strings.HasPrefix(l.URL, "https://") && !strings.HasPrefix(l.URL, "http://") && !strings.HasPrefix(l.URL, "mailto:") {
+			l.URL = ""
+		}
+		sec.Links[i] = l
+	}
+}
+
+func noControl(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) && r != '\n' {
+			return -1
+		}
+		return r
+	}, s)
 }
 
 type parser struct {
