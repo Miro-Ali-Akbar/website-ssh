@@ -32,24 +32,6 @@ Text and link targets from the site are stripped of control characters, and
 only `http(s)` and `mailto` links are kept, because everything is written
 straight to visitors' terminals.
 
-**Opening links:** a server can't open a browser on the visitor's machine, so
-a link is copied to the clipboard (OSC 52, supported by most modern
-terminals) and shown in the status line. Links are also OSC 8 hyperlinks, so
-ctrl+click (cmd+click on macOS) works in most terminals.
-
-## What visitors can't do
-
-Anyone can connect without a password or key, like a public website, but:
-
-- **Shell or commands:** none. `ssh miro.zip <command>` and sessions without
-  a terminal (`ssh -T`) are refused.
-- **Files:** no SFTP or SCP. The container runs as a non-root user on a
-  read-only filesystem with no shell or tools (distroless).
-- **Forwarding:** `-L`, `-R` and `-A` are refused.
-- **Flooding:** connections are rate limited per IP (1 per second, burst of
-  10), at most 50 sessions run at once, idle sessions close after 10 minutes
-  and every session closes after an hour.
-
 ## Running locally
 
 Needs podman (or Go 1.26). `make help` lists the shortcuts:
@@ -79,13 +61,3 @@ new on every start, so skip the known-hosts check while testing:
 Pushing to `main` builds a multi-arch image (`linux/arm64`, `linux/arm/v7`)
 to `ghcr.io/miro-ali-akbar/website-ssh` via `.github/workflows/image.yml`. The
 package is public, so the cluster pulls it without a secret.
-
-It runs on `pi3-2` from the cluster repo (`apps/website-ssh/`). The pod
-listens on port 2222 through a `hostPort`, and the router forwards external
-TCP port 22 to `192.168.0.176:2222`. The nodes' own sshd stays on 22 and is
-not exposed. The host key is a fixed SOPS-encrypted Secret, so returning
-visitors don't get a "host key changed" warning after a redeploy. The
-`deploy/` folder holds the same manifests without the encrypted key.
-
-The pod requests 16 MiB of memory (limit 64 MiB). Internet scanners find
-port 22 within minutes, so the logs fill with refused bot connections.
