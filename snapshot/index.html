@@ -80,7 +80,7 @@
     <div class="ball left"></div>
     <div class="box-row">
       <div class="floating-box side">
-        <div class="floating-box focus" style="display:flex;align-items:center;justify-content:center;">
+        <div class="floating-box focus wip-box">
           <span class="wip">WIP</span>
         </div>
         <div class="floating-box focus box-row">
@@ -151,11 +151,11 @@
         <img src="images/kilroy.png" alt="Kilroy" class="kilroy-small">
         <div class="floating-box focus navigation box-row">
           <h3>Navigation</h3>
-          <a href="#welcome">Welcome</a>
-          <a href="#skills">Skills</a>
-          <a href="#projects">Projects</a>
+          <a href="#welcome" class="cur-button">Welcome</a>
+          <a href="#skills" class="cur-button">Skills</a>
+          <a href="#projects" class="cur-button">Projects</a>
         </div>
-        <div class="floating-box focus count box-row cur-button" style="bottom:calc(var(--focus-height) + var(--border-width) + var(--border-width));" onclick="handleClap()" title="Give the website a clap!">
+        <div class="floating-box focus count clap box-row cur-button" onclick="handleClap()" title="Give the website a clap!">
           <h3> Clap </h3>
           <div class="count-border" id="clap-digits">
             <span class="digit">0</span>
@@ -186,8 +186,8 @@
 
   <script src="main.js"></script>
 
-  <div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;cursor:zoom-out;">
-    <img id="lightbox-img" src="" alt="" style="max-width:var(--center-width);max-height:var(--box-height);border:2px solid var(--black);border-radius:5px;box-shadow:10px 10px 0 rgba(0,0,0,1);">
+  <div id="lightbox" class="cur-button" onclick="this.style.display='none'" style="display:none;">
+    <img id="lightbox-img" class="cur-button" src="" alt="" onclick="event.stopPropagation(); toggleLightboxZoom(this)">
   </div>
 </body>
 

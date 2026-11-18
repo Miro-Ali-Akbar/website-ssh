@@ -7,7 +7,7 @@ ssh miro.zip
 ```
 
 Arrow keys or `hjkl` move around, `enter` or `space` opens a section or a
-link, `q` quits.
+link, `c` claps, `q` (or `esc`) quits.
 
 ## How it works
 

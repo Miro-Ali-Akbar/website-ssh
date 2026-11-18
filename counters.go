@@ -39,7 +39,8 @@ func (c *counters) call(method, path string) (map[string]int, error) {
 		return nil, fmt.Errorf("%s %s: %s", method, path, resp.Status)
 	}
 	var out map[string]int
-	return out, json.NewDecoder(resp.Body).Decode(&out)
+	err = json.NewDecoder(resp.Body).Decode(&out)
+	return out, err
 }
 
 // visit registers this session as a visitor, then reads both counts.
